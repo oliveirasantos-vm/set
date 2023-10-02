@@ -1,140 +1,164 @@
-import ctypes
-
-# Serve para definir um número para qualquer tipo de dado, podendo ser objeto, lista, etc.
-def numero(valor):
-    return ctypes.c_int.from_address(id(valor)).value
-
-# Define tipo de dados Set através de uma classe.
-class meuSet:
-    # Recebe um tamanho (quantidade de dados que aceita) e monta uma matriz baseado nesse tamanho, com valores None.
+def converte_int(valor):
+    str_valor = f'[{type(valor)},{valor}]'
+    sequencia_ascii = ''
+    for caracter in str_valor:
+        sequencia_ascii = sequencia_ascii + str(ord(caracter))
+    return int(sequencia_ascii)
+class Hash:
     def __init__(self, tamanho):
-        self.tamanho = tamanho 
-        self.matriz = [None] * tamanho
-        self.elementos_inseridos = 0
-    # Aqui lista os valores preenchidos na matriz
+        self.tamanho = tamanho
+        self.tabela = [None] * tamanho
+        self.quantidade = 0
+    
+    def calcula_indice(self, valor):
+        return converte_int(valor) % self.tamanho
+    
     def listar(self):
         for i in range(self.tamanho):
-            # Lista tudo, lista, objeto, inteiro, string e os diabo.
-            if self.matriz[i] is not None:
-                print(self.matriz[i]) #tenho que entender ainda
-            # Agora se não tem nada, mostra Vazion
+            if self.tabela[i] is not None:
+                print(f'{type(self.tabela[i])} = {self.tabela[i]}')
             else:
-                print('VAZIO')
+                print(None)
+        return
 
-    # Aqui retorna a chave da nossa hash, ou seja, em que posição vai gravar o valor
-    # Esse cálculo é dado pelo resto da divisão da chave pelo tamanho
-    # Para um caso base, vamos definir todo o valor em chave como inteiro, pois não tenho capacidade intelectual caso isso seja uma lista ou objeto agora no momento
-    def hash(self, chave):
-        posicao = numero(chave) % self.tamanho
-        return posicao
-    
-    # Aqui é a função para inserir. Coloco um valor a uma posição da matriz definida nesse tipo de dado
-    def inserir(self, chave):
-        if self.elementos_inseridos >= self.tamanho:
-            # A tabela está cheia, você pode lançar uma exceção ou retornar False
-            print("A tabela está cheia, não é possível inserir mais elementos.")
-            # Ou
-            # return False
-        # Calculo uma posição
-        posicao = self.hash(chave)
-        # Vejo se já está preenchida ou se está removida. Se está removida, eu tenho que gerar uma nova, pelo resto da divisão do hash + 1, dessa vez.
-        while self.matriz[posicao] is not None:
-            posicao = posicao + 1
-            posicao = posicao % self.tamanho
-        # A posição que encontrar pra esse diabo é onde eu armazeno o meu valor
-        self.matriz[posicao] = chave
-        self.elementos_inseridos += 1
-        
-    # Aqui tem que apagar. Outra desgraça, mas parecido com inserir
-    def remover(self, chave):
-        # Calculo a posição da minha chave que desejo excluir
-        posicao = self.hash(chave)
-        # Enquanto tem valor nessa posição...
-        while self.matriz[posicao] is not None:
-            # Vejo se o valor confere...
-            if self.matriz[posicao] == chave:
-                # Se confere eu vou armazenar nesse valor REMOVIDO para avisar que não tem mais
-                self.matriz[posicao] = None
-                # Retorno True pois removeu
+    def inserir(self, valor):
+        indice = self.calcula_indice(valor)
+        if self.quantidade < self.tamanho:
+            while self.tabela[indice] is not None:
+                if self.tabela[indice] == valor and type(self.tabela[indice]) == type(valor):
+                    return self.tabela[indice]
+                indice = indice + 1
+                indice = indice % self.tamanho
+
+            self.tabela[indice] = valor
+            self.quantidade = self.quantidade + 1
+            return self.tabela[indice] 
+        else:
+            return None
+
+    def remover(self, valor):
+        indice = self.calcula_indice(valor)
+        while self.tabela[indice] is not None:
+            if self.tabela[indice] == valor and type(self.tabela[indice]) == type(valor):
+                self.tabela[indice] = None
+                self.quantidade = self.quantidade - 1
                 return True
-            # Agora se o valor não confere...
             else:
-                # Calculo a próxima posição de hash possível para percorrer minha tabela
-                posicao = posicao + 1
-                posicao = posicao % self.tamanho
-        # Se o corno do usuário simplesmente não atinou a inserir um valor decente para remover...
-        # ...retorno False para avisar o abençoado
+                indice = indice + 1
+                indice = indice % self.tamanho
         return False
     
-    #
-    def buscar(self, chave):
-        # Calculo a posição do meu hash
-        posicao = self.hash(chave)
-        # Enquanto tem valor nessa posição...
-        while self.matriz[posicao] is not None:
-            # Vejo se o valor confere...
-            if self.matriz[posicao] == chave:
-                # Valor confere? Show, retorna pro abençoado
-                return self.matriz[posicao]
-            # Agora se o valor não confere...
+    def buscar(self, valor):
+        indice = self.calcula_indice(valor)
+        while self.tabela[indice] is not None:
+            if self.tabela[indice] == valor and type(self.tabela[indice]) == type(valor):
+                return self.tabela[indice]
             else:
-                # Calculo a próxima posição de hash possível para percorrer minha tabela
-                posicao = posicao + 1
-                posicao = posicao % self.tamanho
-        # Se o corno do usuário simplesmente não atinou a inserir um valor decente para buscar...
-        # ...retorno None porque o usuário é um imecíl
+                indice = indice + 1
+                indice = indice % self.tamanho
         return None
     
-    # Aqui faz a união dos elementos de um outro conjunto tipo meuSet enviado por parâmetro
-    def uniao(self, matriz):
-        # Soma os tamanhos
-        self.tamanho = self.tamanho + matriz.tamanho
-        # Junta as matrizes
-        self.matriz = [*self.matriz, *matriz.matriz]
+    def interseccao(self, outro_hash):
+        conjunto_a = [*self.tabela]
+        conjunto_b = [*outro_hash.tabela]
 
-    # Aqui faz a intersecção, retornando os valores comuns entre o objeto tipo meuSet com outro objeto do tipo meuSet
-    def interseccao(self, matriz):
-        # Desempacota os valores das matrizes e adiciona em variáveis a e b
-        a = [*self.matriz]
-        b = [*matriz.matriz]
-        # Armazena a intersecção em uma matriz nova
-        c = a.intersection(b)
-        # Depois retorna a intersecção, adaptado ao tipo de dado meuSet
-        return meuSet(len(c),[c])
-    
-    # Aqui retorna a diferença entre um tipo de dado meuSet para outro
-    def diferenca(self, matriz):
-        # Aqui ele desempacote a matriz a
-        a = [*matriz.matriz]
-        # Armazena a intersec
-        b = [*self.intersection(matriz).matriz]
-        for elemento in b:
-            a.remove(elemento)
-        return meuSet(len(a),[a])
+        interseccao_ab = []
+
+        for elemento_a in conjunto_a:
+            for elemento_b in conjunto_b:
+                if elemento_a == elemento_b and type(elemento_a) == type(elemento_b):
+                    interseccao_ab.append(elemento_a)
         
+        novo_hash = Hash(len(interseccao_ab))
+
+        for elemento_ab in interseccao_ab:
+            novo_hash.inserir(elemento_ab)
+
+        return novo_hash
+
+    def uniao(self, outro_hash):
+        conjunto_a = [*self.tabela]
+        conjunto_b = [*outro_hash.tabela]
+
+        uniao_ab = conjunto_a
+
+        for elemento_b in conjunto_b:
+            if elemento_b not in conjunto_a:
+                uniao_ab.append(elemento_b)
+
+        novo_hash = Hash(self.tamanho + outro_hash.tamanho)
+
+        for elemento_ab in uniao_ab:
+            novo_hash.inserir(elemento_ab)
+
+        return novo_hash
+
+    def diferenca(self, outro_hash):
+        uniao_ab = self.uniao(outro_hash)
+        interseccao_ab = self.interseccao(outro_hash)
+
+        conjunto_uniao_ab = [*uniao_ab.tabela]
+        conjunto_interseccao_ab = [*interseccao_ab.tabela]
+
+        diferenca_ab = []
+
+        for elemento_uniao_ab in conjunto_uniao_ab:
+            for elemento_interseccao_ab in conjunto_interseccao_ab:
+                if not (elemento_uniao_ab == elemento_interseccao_ab and type(elemento_uniao_ab) == type(elemento_interseccao_ab)):
+                    diferenca_ab.append(elemento_uniao_ab)
+
+        novo_hash = Hash(len(diferenca_ab))
+
+        for elemento_ab in diferenca_ab:
+            novo_hash.inserir(elemento_ab)
+
+        return novo_hash
         
 def main():
-    rodando = True
 
-    set1 = meuSet(10)
-    set1.inserir(1)
-    set1.inserir('abc')
-    set1.inserir([1,2])
-    set1.inserir(True)
-    set1.inserir(False)
+    set_a = Hash(10)
+    set_a.inserir(1)
+    set_a.inserir('abc')
+    set_a.inserir([1,2])
+    set_a.inserir(True)
+    set_a.inserir(False)
+    set_a.inserir(False)
+    set_a.inserir('False')
+    
 
-    set1.listar()
+    print("--------Set A--------")
+    set_a.listar()
 
-    set2 = meuSet(5)
-    set2.inserir(2)
-    set2.inserir('cde')
-    set2.inserir([3,4])
-    set2.inserir('Funciona')
-    set2.inserir('Desgraça')
-    set2.inserir('Desgraçaw')
+    set_b = Hash(5)
+    set_b.inserir(1)
+    set_b.inserir('cde')
+    set_b.inserir([3,4])
+    set_b.inserir('fgh')
+    set_b.inserir('ijk')
+    set_b.inserir('lmn')
 
-    set2.listar()
+    print("--------Set B--------")
+    set_b.listar()
+
+    interseccao_ab = set_a.interseccao(set_b)
+    print("---Intersecção A B---")
+    interseccao_ab.listar()
+
+    uniao_ab = set_a.uniao(set_b)
+    print("------União A B------")
+    uniao_ab.listar()
+
+    diferenca_ab = set_a.diferenca(set_b)
+    print("----Diferença A B----")
+    diferenca_ab.listar()
+
+    set_a.remover(2)
+    set_a.remover('abc')
+    print("Removido 2 e abc de set a")
+    print("--------Set A--------")
+    set_a.listar()
+
+    print(f'Resultado da busca por 1 no set_a: {set_a.buscar(1)}')
+    print(f'Resultado da busca por 999 no set_a: {set_a.buscar(999)}')
 
 main()
-    
-    
