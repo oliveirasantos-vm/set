@@ -1,17 +1,19 @@
-def converte_int(valor):
-    str_valor = f'[{type(valor)},{valor}]'
-    sequencia_ascii = ''
-    for caracter in str_valor:
-        sequencia_ascii = sequencia_ascii + str(ord(caracter))
-    return int(sequencia_ascii)
+
 class Hash:
     def __init__(self, tamanho):
         self.tamanho = tamanho
         self.tabela = [None] * tamanho
         self.quantidade = 0
     
+    def converte_int(self, valor):
+        str_valor = f'[{type(valor)},{valor}]'
+        sequencia_ascii = ''
+        for caracter in str_valor:
+            sequencia_ascii = sequencia_ascii + str(ord(caracter))
+        return int(sequencia_ascii)
+
     def calcula_indice(self, valor):
-        return converte_int(valor) % self.tamanho
+        return self.converte_int(valor) % self.tamanho
     
     def listar(self):
         for i in range(self.tamanho):
